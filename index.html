@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>موقعي الشخصي</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+      background-color: #007bff;
+      color: white;
+    }
+
+    main {
+      padding: 20px;
+      flex: 1;
+    }
+
+    section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul li {
+      background-color: #f9f9f9;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+    }
+
+    .file-preview {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .file-preview img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .text-preview {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>مرحبًا بك في موقعي الشخصي</h1>
+    <p>احتفظ بملاحظاتك وملفاتك هنا</p>
+  </header>
+
+  <main>
+    <section id="notes">
+      <h2>ملاحظاتي</h2>
+      <textarea id="noteInput" placeholder="اكتب ملاحظتك هنا..."></textarea>
+      <button onclick="saveNote()">حفظ الملاحظة</button>
+      <ul id="notesList"></ul>
+    </section>
+
+    <section id="fileUpload">
+      <h2>رفع الملفات</h2>
+      <div style="margin-bottom: 10px;">
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">رفع الملف</button>
+      </div>
+      <h3>الملفات المرفوعة</h3>
+      <ul id="fileList"></ul>
+    </section>
+
+    <section id="trash">
+      <h2>سلة المهملات</h2>
+      <ul id="trashList"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2024 مغربي. جميع الحقوق محفوظة.</p>
+  </footer>
+
+  <script>
+    let isPreviewOpen = false; // Flag to check if preview is open
+
+    // حفظ الملاحظات
+    function saveNote() {
+      const noteInput = document.getElementById('noteInput');
+      const notesList = document.getElementById('notesList');
+
+      if (noteInput.value.trim() !== '') {
+        const li = document.createElement('li');
+        li.textContent = noteInput.value;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'حذف';
+        deleteButton.onclick = function () {
+          moveToTrash(li, 'notesList');
+        };
+
+        li.appendChild(deleteButton);
+        notesList.appendChild(li);
+        noteInput.value = '';
+      } else {
+        alert('يرجى كتابة ملاحظة!');
+      }
+    }
+
+    // رفع الملفات
+    function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const fileList = document.getElementById('fileList');
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const li = document.createElement('li');
+        li.textContent = `تم رفع الملف: ${file.name}`;
+
+        const viewButton = document.createElement('button');
+        viewButton.textContent = 'عرض';
+        viewButton.onclick = function () {
+          previewFile(file);
+        };
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'حذف';
+        deleteButton.onclick = function () {
+          moveToTrash(li, 'fileList');
+        };
+
+        li.appendChild(viewButton);
+        li.appendChild(deleteButton);
+        fileList.appendChild(li);
+        fileInput.value = '';
+      } else {
+        alert('يرجى اختيار ملف!');
+      }
+    }
+
+    // عرض محتوى الملف
+    function previewFile(file) {
+      if (isPreviewOpen) return; // Prevent opening multiple previews
+      isPreviewOpen = true;
+
+      const fileType = file.type;
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay';
+      overlay.onclick = closePreview;
+      document.body.appendChild(overlay);
+
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'file-preview';
+
+      if (fileType.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        previewContainer.appendChild(img);
+      } else if (fileType.startsWith('application/pdf')) {
+        const pdfPreview = document.createElement('iframe');
+        pdfPreview.src = URL.createObjectURL(file);
+        pdfPreview.width = '100%';
+        pdfPreview.height = '500px';
+        pdfPreview.style.border = 'none';
+        previewContainer.appendChild(pdfPreview);
+      } else if (fileType === 'text/plain' || fileType.startsWith('application/')) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const textPreview = document.createElement('div');
+          textPreview.className = 'text-preview';
+          textPreview.textContent = e.target.result;
+          previewContainer.appendChild(textPreview);
+        };
+        reader.readAsText(file);
+      } else {
+        alert('عرض هذا النوع من الملفات غير مدعوم حاليًا.');
+        closePreview();
+        return;
+      }
+
+      const closeButton = document.createElement('button');
+      closeButton.textContent = 'إغلاق';
+      closeButton.style.marginTop = '10px';
+      closeButton.onclick = closePreview;
+
+      previewContainer.appendChild(closeButton);
+      document.body.appendChild(previewContainer);
+    }
+
+    // إغلاق نافذة العرض
+    function closePreview() {
+      const overlay = document.querySelector('.overlay');
+      const previewContainer = document.querySelector('.file-preview');
+      if (overlay) document.body.removeChild(overlay);
+      if (previewContainer) document.body.removeChild(previewContainer);
+      isPreviewOpen = false;
+    }
+
+    // نقل العنصر إلى سلة المهملات
+    function moveToTrash(item, listType) {
+      const trashList = document.getElementById('trashList');
+      const clone = item.cloneNode(true);
+
+      const restoreButton = document.createElement('button');
+      restoreButton.textContent = 'استعادة';
+      restoreButton.onclick = function () {
+        restoreFromTrash(clone, listType);
+        trashList.removeChild(clone);
+      };
+
+      const deletePermanentlyButton = document.createElement('button');
+      deletePermanentlyButton.textContent = 'حذف نهائي';
+      deletePermanentlyButton.onclick = function () {
+        trashList.removeChild(clone);
+      };
+
+      clone.appendChild(restoreButton);
+      clone.appendChild(deletePermanentlyButton);
+      trashList.appendChild(clone);
+      item.parentNode.removeChild(item);
+    }
+
+    // استعادة العنصر من سلة المهملات
+    function restoreFromTrash(item, listType) {
+      const targetList = document.getElementById(listType);
+      const clone = item.cloneNode(true);
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'حذف';
+      deleteButton.onclick = function () {
+        moveToTrash(clone, listType);
+      };
+
+      clone.appendChild(deleteButton);
+      targetList.appendChild(clone);
+      item.parentNode.removeChild(item);
+    }
+  </script>
+</body>
+</html>
